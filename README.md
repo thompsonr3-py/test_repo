@@ -45,6 +45,44 @@ This CI setup is intentionally minimal and designed to demonstrate the test-run 
   2. Writing tests for the existing Flask app (using TestClient/httpx) and restoring the original code.
 - If you’d like, I can rework the repository structure to keep the demo separate from the project or add additional CI job steps (lint, static typing, coverage, or multiple Python matrices).
 
+## Docker image (CD)
+This project includes an optional CD job in the Actions workflow that builds and pushes a Docker image to the GitHub Container Registry (GHCR) for pushes to `main`.
+
+### Build and run locally
+If you have Docker installed locally, you can build and run the image for quick validation:
+
+```powershell
+# Build a local image
+docker build -t test_repo:local .
+
+# Run it; the container prints the result of `app.add(1, 2)` by default
+docker run --rm test_repo:local
+
+### Run tests inside the container locally
+You can build and run tests inside the container locally before pushing.
+
+```powershell
+# Build and load the image to the local Docker daemon
+docker build -t test_repo:local .
+
+# Run pytest inside the container
+docker run --rm test_repo:local pytest -q
+```
+```
+
+### Push to GHCR (optional)
+To push images to GHCR from your machine instead of the workflow, you can use a GHCR personal access token (PAT) with the `write:packages` scope. Login and push manually:
+
+```powershell
+# login
+docker login ghcr.io -u <YOUR_GITHUB_USERNAME> -p <PERSONAL_ACCESS_TOKEN>
+
+# tag and push
+docker tag test_repo:local ghcr.io/<OWNER>/test_repo:latest
+docker push ghcr.io/<OWNER>/test_repo:latest
+```
+
+
 ## Contact / Maintenance
 - Created and maintained by the repository owner. If you want changes to CI, add a feature request via PR.
 

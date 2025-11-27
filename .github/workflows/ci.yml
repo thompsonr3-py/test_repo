@@ -1,5 +1,9 @@
 name: CI
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches: [ main ]
@@ -26,3 +30,39 @@ jobs:
       - name: Run tests
         run: |
           pytest -q
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Build image for container tests (load locally)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          load: true
+          tags: |
+            test_repo:${{ github.sha }}
+
+      - name: Run tests inside built container
+        run: |
+          docker run --rm test_repo:${{ github.sha }} pytest -q
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image to GHCR
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
