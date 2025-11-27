@@ -3,6 +3,11 @@ def add(a, b):
     return a + b
 
 
+def subtract(a, b):
+    """Return the difference between two numbers (a - b)."""
+    return a - b
+
+
 if __name__ == "__main__":
     # Simple CLI for manual verification
     import argparse
